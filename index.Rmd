@@ -1,7 +1,116 @@
+---
+title: "graph"
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+date: '2023-03-01'
+---
 ```{r}
-juditha <- get_track_audio_features(c("2M5b9YLAgFroqWzeaZf86e", "3DBKc4ioGnMQLlbGQcFDIO"))
-alla <- get_album_tracks("7oI0E3DdTbD85rhMg19GSU")
-gilberto <- get_artist_audio_features("gilberto gil")
-ecm <- get_playlist_audio_features("", "1zN4nK6oHMo2dei2WWPtSL")
+library(flexdashboard)
+
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+
+
+
+```
+
+
+```{r}
+library(compmus)
+```
+
+```{r}
+library(spotifyr)
+
+```
+
+
+
+
+```{r}
+lua <-
+  get_tidy_audio_analysis("5YK0WaXMtRHeWEn8EIbmPw") |> # Change URI.
+  compmus_align(bars, segments) |>                     # Change `bars`
+  select(bars) |>                                      #   in all three
+  unnest(bars) |>                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+```
+
+
+```{r}
+lua |>
+  compmus_gather_timbre() |>
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic()
+```
+
+
+
+```{r}
+lua |>
+  compmus_self_similarity(pitches, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+```
+
+```{r}
+lua |>
+  compmus_self_similarity(timbre, "cosine") |> 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
 ```
 
